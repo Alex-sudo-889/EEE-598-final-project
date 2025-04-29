@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Dreamer V3 – World‑Model RL Without Tuning</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui, sans-serif;margin:0;padding:0}
+body{background:#121212;color:#f0f0f0;overflow:hidden}
+.slide{display:none;flex-direction:column;justify-content:center;align-items:center;height:100vh;padding:3rem;text-align:center}
+.slide.active{display:flex}
+h1{font-size:3.2rem;margin-bottom:1rem}
+h2{font-size:2.3rem;margin-bottom:0.8rem}
+p,li{font-size:1.25rem;max-width:60rem;line-height:1.55}
+ul{list-style:disc;margin-left:2rem;margin-top:0.8rem}
+code{background:#222;padding:0.25rem 0.45rem;border-radius:4px;font-size:1.1rem}
+video{max-width:95%;border:3px solid #555;border-radius:8px;margin-top:1rem;height:70vh}
+video.pong-big{height:85vh!important;width:auto!important;max-width:none!important}
+.eq{font-size:1.35rem;margin:1.3rem 0}
+footer{position:fixed;bottom:1rem;left:0;right:0;text-align:center;font-size:0.9rem;color:#888}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+</head>
+<body>
+<!-- Title -->
+<section class="slide active"><h1>Mastering Diverse Domains<br>through World Models</h1><p>Dreamer V3 overview · Alexander Hoffman · Apr 2025</p></section>
+<!-- Dreaming -->
+<section class="slide"><h2>What does “Dreaming” mean?</h2><p>An agent learns <em>latent dynamics</em> and trains on imagined roll‑outs:</p><div class="eq">\[s_{t+1}\sim p_{\phi}(s_{t+1}|s_t,a_t),\quad a_t\sim\pi_{\theta}(a_t|s_t)\]</div><ol style="text-align:left;max-width:55rem"><li>Encode real trajectory \(x_{1:T}\to s_{1:T}\).</li><li>Unroll model for H steps.</li><li>Update \(v_{\psi}\) & \(\pi_{\theta}\) on synthetic data.</li></ol></section>
+<!-- Landscape -->
+<section class="slide"><h2>Where It Fits in RL</h2><ul><li><strong>Model‑free:</strong> simple, but data‑hungry.</li><li><strong>MuZero‑style:</strong> discrete search, expensive.</li><li><strong>Dreamer:</strong> learn once, reuse everywhere.</li></ul></section>
+<!-- Lineage -->
+<section class="slide"><h2>Dreamer Lineage</h2><p>V1 (2019) → V2 (2020) → <strong>V3 (2023)</strong>: one hyper‑param set; first AI diamond.</p></section>
+<!-- Diagram -->
+<section class="slide"><h2>System Diagram</h2><div class="eq">\[\boxed{\text{World Model }p_{\phi}}\;\to\;\boxed{\text{Critic }v_{\psi}}\;\gets\;\boxed{\text{Actor }\pi_{\theta}}\]</div></section>
+<!-- WM -->
+<section class="slide"><h2>World Model (RSSM)</h2><div class="eq">\[h_t=f(h_{t-1},z_{t-1},a_{t-1}),\; z_t\sim q_{\phi}(z_t|h_t,x_t)\]</div></section>
+<!-- KL -->
+<section class="slide"><h2>KL‑Balancing + Free‑Bits</h2><div class="eq">\[\mathcal L_{KL}=\beta_{dyn}[\!\mathrm{KL}(q\|p)\!]_{\ge1}+\beta_{rep}[\!\mathrm{KL}(p\|q)\!]_{\ge1}\]</div></section>
+<!-- Critic -->
+<section class="slide"><h2>Two‑Hot Value Regression</h2><div class="eq">\[\hat v(s)=\text{symexp}\!\Big(\sum_i p_{\psi}(b_i|s)\,b_i\Big)\]</div></section>
+<!-- Actor obj -->
+<section class="slide"><h2>Actor Objective & Scaling</h2><div class="eq">\[\mathcal L_{\theta}=-\sum_{t=1}^{H}\Big(\tfrac{R^{\lambda}_t}{\max(1,S)}-\eta\,\mathcal H[\pi]\Big)\]</div><div class="eq">\[S=\mathrm{Per}_{95}-\mathrm{Per}_{5}\]</div></section>
+<!-- Symlog -->
+<section class="slide"><h2>Symlog Transform</h2><div class="eq">\[\text{symlog}(x)=\operatorname{sgn}(x)\ln(|x|+1)\]</div></section>
+<!-- Training loop -->
+<section class="slide"><h2>Training Loop</h2><ol style="text-align:left;max-width:55rem"><li>Env step → replay.</li><li>Sample B×T.</li><li>Update WM.</li><li>Imagine H, compute λ‑return.</li><li>Update critic & actor.</li></ol></section>
+<!-- Hyperparams -->
+<section class="slide"><h2>Fixed Hyper‑parameters</h2><p>Same Table W.1 used across all domains.</p></section>
+<!-- Scaling curves placeholder -->
+<section class="slide"><h2>Scaling Behaviour</h2><p>[insert Figure 6]</p></section>
+<!-- Multi‑domain -->
+<section class="slide"><h2>Diverse Benchmarks</h2><p>Control‑Suite · Atari · DMLab · Crafter · Minecraft</p></section>
+<!-- Results -->
+<section class="slide"><h2>Scorecard</h2><p>V3 sets new SoTA on 4/7 suites.</p></section>
+<!-- Crafter video -->
+<section class="slide"><h2>Crafter Demo</h2><video controls src="crafter.mp4" poster="crafter.jpg"></video></section>
+<!-- Pong video -->
+<section class="slide"><h2>Pong Demo</h2><video class="pong-big" controls src="/home/emperor/logdir/dreamer/pong/scope/epstats-policy_image.mp4/00000000000003531520-680ec378c4e05ff6.mp4" poster="pong.jpg"></video></section>
+<!-- Minecraft -->
+<section class="slide"><h2>Minecraft Diamonds</h2><p>First agent to mine diamonds from scratch in 100 M steps.</p></section>
+<!-- Ablations -->
+<section class="slide"><h2>Ablation Highlights</h2><ul><li>No symlog ⇒ divergence on Minecraft.</li><li>No percentile scaling ⇒ zero sparse‑reward progress.</li></ul></section>
+<!-- Math takeaway -->
+<section class="slide"><h2>Mathematical Takeaways</h2><ul><li>Symlog ≤1 gradient.</li><li>Two‑hot critic unbiased.</li><li>KL + free‑bits keeps 1‑2 nats.</li></ul></section>
+<!-- Limitations -->
+<section class="slide"><h2>Limitations & Future Work</h2><ul><li>Diamond success 50/40 seeds.</li><li>Block‑break speed heuristic.</li><li>Multi‑task transfer ?</li></ul></section>
+<!-- Thanks -->
+<section class="slide"><h2>Thank you! Questions?</h2></section>
+
+<footer>← / → or click</footer>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let idx=0;function show(n){slides[idx].classList.remove('active');idx=(n+slides.length)%slides.length;slides[idx].classList.add('active');}addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')show(idx+1);if(e.key==='ArrowLeft')show(idx-1);});addEventListener('click',()=>show(idx+1));
+</script>
+</body>
+</html>
